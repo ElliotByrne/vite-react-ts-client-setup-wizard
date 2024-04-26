@@ -1,62 +1,81 @@
-import { ReactNode } from "react";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 
-interface FormInterface {
-  children: ReactNode | Array<ReactNode> | null;
-  handleClose: () => void;
-  postData: () => void;
-}
+// yup schema - form client side validation.
+const schema = yup.object().shape({
+  name: yup
+    .string()
+    .required("Name is required")
+    .max(30, "Maximum of 30 characters allowed"),
+  dob: yup.string().required("Date of birth is required"),
+  "primary-language": yup
+    .string()
+    .required("Primary language is a required field")
+    .max(50, "Maximum of 50 characters allowed"),
+  "secondary-language": yup
+    .string()
+    .required("Secondary language is a required field")
+    .max(30, "Maximum of 50 characters allowed"),
+});
 
-export const FormAddNew = ({
-  children,
-  handleClose,
-  postData,
-}: FormInterface) => {
-  // const handleSubmit = (e: any) => {
-  //   e.preventDefault();
+const FormError = ({ message }: { message: string }) => {
+  return <p className="form__error">{message}</p>;
+};
 
-  //   postData(
-  //     e.target.todo.value,
-  //     e.target.completed.checked,
-  //     e.target.userId.value
-  //   );
+export const FormAddNew = () => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    // reset,
+  } = useForm({ resolver: yupResolver(schema) });
 
-  //   e.target.reset();
-  // };
-
+  const onSubmit = (data: any) => console.log(data);
   return (
-    <form
-      className="form"
-      // onSubmit={(e) => handleSubmit(e)}
-    >
+    <form className="form" onSubmit={handleSubmit(onSubmit)}>
       <div>
         <label className="form__label" htmlFor="name">
           Client name
         </label>
-        <input type="text" name="name" />
+        <input
+          type="text"
+          id="name"
+          {...register("name", { required: true, maxLength: 30 })}
+          aria-invalid={errors.name ? "true" : "false"}
+        />
+        {errors.name && <FormError message={errors?.name?.message || ""} />}
       </div>
       <div>
         <label className="form__label" htmlFor="name">
           Date of birth (dd/mm/yy)
         </label>
         <input type="text" name="dob" />
+        {errors.dob && <FormError message={errors?.dob?.message || ""} />}
       </div>
       <div>
         <label className="form__label" htmlFor="name">
           Primary language
         </label>
         <input type="text" name="primary-language" />
+        {errors["primary-language"] && (
+          <FormError message={errors?.["primary-language"].message || ""} />
+        )}
       </div>
       <div>
         <label className="form__label" htmlFor="name">
           Secondary language
         </label>
         <input type="text" name="secondary-language" />
+        {errors["secondary-language"] && (
+          <FormError message={errors?.["secondary-language"].message || ""} />
+        )}
       </div>
       <div>
         <label className="form__label" htmlFor="completed">
           Primary funding source
         </label>
-        <select value="NDIS" name="funding">
+        <select name="funding">
           <option value="NDIS">NDIS</option>
           <option value="HCP">HCP</option>
           <option value="CHSP">CHSP</option>
@@ -65,15 +84,21 @@ export const FormAddNew = ({
         </select>
       </div>
 
-      <div>
-        <input type="checkbox" name="confirm" />
+      <div className="form__checkbox">
+        <input type="checkbox" name="confirm" id="confirm" required />
         <label htmlFor="confirm" className="form__label form__label--checkbox">
-          Confirm if you believe the information filled out in this form is
-          correct.
+          Confirm that you have permission to add clients to the database.
+          Misuse of this form will have your access revoked.
         </label>
       </div>
 
-      <div className="col col--gap col--row form__footer">
+      <div className="col col--fill  form__footer">
+        {errors && (
+          <FormError message="The form has errors, please recheck each input has been filled out correctly." />
+        )}
+      </div>
+
+      <div className="col col--gap col--row">
         <div className="col col--fill">
           <button className="button button--outline" type="submit">
             Add another

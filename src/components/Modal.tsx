@@ -1,4 +1,9 @@
-import React, { ReactNode, useEffect, useState } from "react";
+import React, {
+  FunctionComponent,
+  ReactNode,
+  useEffect,
+  useState,
+} from "react";
 import classNames from "classnames";
 import "../App.css";
 import { IconButton } from "./IconButton";
@@ -39,3 +44,5 @@ export const Modal = ({ children, open, onClose }: ModalInterface) => {
     </div>
   );
 };
+
+export default Modal as FunctionComponent;

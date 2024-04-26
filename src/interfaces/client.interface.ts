@@ -1,6 +1,8 @@
 export interface ClientInterface {
-  id: number;
-  todo: string;
-  completed: boolean;
-  isDeleted: boolean;
+  id: string;
+  name: string;
+  dob: string;
+  "primary-language": string;
+  "secondary-language": string;
+  funding: "NDIS" | "HCP" | "CHSP" | "DVA" | "HACC";
 }
