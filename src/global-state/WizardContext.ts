@@ -1,3 +1,3 @@
 import { createContext } from "react";
 
-export const WizardContext = createContext(0);
+export const WizardContext = createContext<number>(0);

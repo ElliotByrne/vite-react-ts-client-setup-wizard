@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { WizardContext } from "../global-state/WizardContext";
 import { ModalContext } from "../global-state/ModalContext";
 import classNames from "classnames";
@@ -7,7 +7,7 @@ import { Icon } from "./Icon";
 
 export const Wizard = () => {
   const [wizardContext, setWizardContext] = useContext(WizardContext);
-  const [modalContext, setModalContext] = useContext(ModalContext);
+  const [_, setModalContext] = useContext(ModalContext);
   const [spotlightPos, setSpotlightPos] = useState({
     x: 0,
     y: 0,
@@ -16,32 +16,38 @@ export const Wizard = () => {
   });
   const [tipScale, setTipScale] = useState(false);
 
-  const wizardSetup = {
-    1: {
-      msg: "Click here to add a new client to the database.",
-      action: () => setModalContext(false),
-    },
-    2: {
-      msg: "Once you've filled out the form fields, click here to submit the form and add start filling out another straight away.",
-      action: () => setModalContext(true),
-    },
-    3: {
-      msg: "Or you can click here to submit the form and view your new additions in the table.",
-      action: () => setModalContext(true),
-    },
-    4: {
-      msg: "Click on a table row to select that client. You can select multiple clients at once and perform grouped actions.",
-      action: () => setModalContext(false),
-    },
-    5: {
-      msg: "Click on the delete button to delete the clients that are currently selected.",
-    },
-    6: { msg: "This button will refresh the data in the table." },
-    7: {
-      msg: "Click here to download the table data as a CSV, which can be imported into a spreadsheet.",
-    },
-    8: { msg: "You can copy the contents of this row to your clipboard." },
-  };
+  const wizardSetup = useMemo(() => {
+    return {
+      1: {
+        msg: "Click here to add a new client to the database.",
+        action: () => setModalContext({ isOpen: false }),
+      },
+      2: {
+        msg: "Once you've filled out the form fields, click here to submit the form and add start filling out another straight away.",
+        action: () => setModalContext({ isOpen: true }),
+      },
+      3: {
+        msg: "Or you can click here to close the form.",
+        action: () => setModalContext({ isOpen: true }),
+      },
+      4: {
+        msg: "Click on a table row to select that client. You can select multiple clients at once and perform grouped actions.",
+        action: () => setModalContext({ isOpen: false }),
+      },
+      5: {
+        msg: "Click on the delete button to delete the clients that are currently selected.",
+      },
+      6: { msg: "This button will refresh the data in the table." },
+      7: {
+        msg: "Click here to download the table data as a CSV, which can be imported into a spreadsheet.",
+      },
+      8: { msg: "You can copy the contents of this row to your clipboard." },
+      9: { msg: "Click here to edit a client." },
+      10: {
+        msg: "Click the question mark button to reopen this helper wizard!",
+      },
+    };
+  }, [setModalContext]);
 
   const getSpotlightedEl = useCallback(() => {
     // Run action of previous step
@@ -70,7 +76,7 @@ export const Wizard = () => {
         setTipScale(0);
       }, 300);
     }
-  }, [wizardContext]);
+  }, [wizardContext, wizardSetup]);
 
   useEffect(() => {
     let throttled = false;
@@ -99,7 +105,13 @@ export const Wizard = () => {
     ) {
       setWizardContext(0);
     }
-  }, [wizardContext, getSpotlightedEl]);
+  }, [
+    wizardContext,
+    setModalContext,
+    wizardSetup,
+    setWizardContext,
+    getSpotlightedEl,
+  ]);
 
   const classes = classNames({
     wizard: true,

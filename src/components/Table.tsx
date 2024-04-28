@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useState, useContext } from "react";
-import { ClientInterface } from "../interfaces/client.interface";
 import { IconButton } from "./IconButton";
 import { IconLink } from "./IconLink";
 import { Icon } from "./Icon";
@@ -7,173 +6,156 @@ import { Checkbox } from "./Checkbox";
 import { Loading } from "./Loading";
 import { WizardContext } from "../global-state/WizardContext";
 import { ModalContext } from "../global-state/ModalContext";
-
-function jsonToCsv(jsonData) {
-  let csv = "";
-  // Get the headers
-  let headers = Object.keys(jsonData[0]);
-  csv += headers.join(",") + "\n";
-  // Add the data
-  jsonData.forEach(function (row) {
-    let data = headers.map((header) => JSON.stringify(row[header])).join(","); // Add JSON.stringify statement
-    csv += data + "\n";
-  });
-  return csv;
-}
-
-// Mock api data
-const clientData = [
-  {
-    id: "1",
-    name: "Alfreds Futterkiste",
-    dob: "07/06/1996",
-    "primary-language": "English",
-    "secondary-language": "English",
-    funding: "NDIS",
-  },
-  {
-    id: "2",
-    name: "Monkey boy",
-    dob: "07/06/1996",
-    "primary-language": "English",
-    "secondary-language": "English",
-    funding: "NDIS",
-  },
-  {
-    id: "3",
-    name: "Mr Burns",
-    dob: "07/06/1996",
-    "primary-language": "English",
-    "secondary-language": "English",
-    funding: "NDIS",
-  },
-  {
-    id: "4",
-    name: "Bailey Stripes",
-    dob: "07/06/1996",
-    "primary-language": "English",
-    "secondary-language": "English",
-    funding: "NDIS",
-  },
-  {
-    id: "5",
-    name: "Smithers",
-    dob: "07/06/1996",
-    "primary-language": "English",
-    "secondary-language": "English",
-    funding: "NDIS",
-  },
-];
-
-// Mock api promise.
-const getData = () =>
-  new Promise((resolve) => {
-    setTimeout(resolve, 500, clientData);
-  });
+import { Modal } from "./Modal";
+import { useFetchAllClients } from "../hooks/useFetchAllClients";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { jsonToCsv } from "../utils/jsonToCsv";
 
 export const Table = () => {
-  const paginationLimit = 4;
-  const [data, setData] = useState<Array<ClientInterface>>([]);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [lastFetched, setLastFetched] = useState(0);
   const [selectedClient, setSelectedClient] = useState<Array<string>>([]);
-  const [csv, setCsv] = useState(null);
   const [downloadAttrs, setDownloadAttrs] = useState({
     href: "",
     download: "clients-csv.csv",
   });
-  const [wizardContext, setWizardContext] = useContext(WizardContext);
-  const [modalContext, setModalContext] = useContext(ModalContext);
+  const [deleteModalMetaData, setDeleteModalMetaData] = useState<{
+    isOpen: boolean;
+    message?: string;
+    id: string | Array<string>;
+    hideSubmit?: boolean;
+  }>({
+    isOpen: false,
+    id: "0",
+    message: "",
+    hideSubmit: false,
+  });
+  const [_, setWizardContext] = useContext(WizardContext);
+  const [__, setModalContext] = useContext(ModalContext);
+  const { isPending, error, data, refetch } = useFetchAllClients();
+  const queryClient = useQueryClient();
 
-  // Initial render
-  useEffect(() => {
-    fetchData();
-  }, []);
+  // Handles deleting one or multiple clients.
+  const deleteClients = useMutation({
+    mutationFn: (ids: Array<string> | string) => {
+      // Delete single client
+      if (ids && typeof ids === "string") {
+        return fetch(`http://localhost:3000/clients/${ids}`, {
+          method: "DELETE",
+          headers: { "Access-Control-Allow-Origin": "*" },
+        });
+      }
+      // Delete multiple clients using different end point.
+      if (ids && typeof ids === "object") {
+        console.log(ids);
+        return fetch(`http://localhost:3000/clients/delete`, {
+          method: "POST",
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ids: ids,
+          }),
+        });
+      }
+      return Promise.reject(
+        () =>
+          "No client ID or array of client ID's sent for deletion. How did you even manage to do this?!"
+      );
+    },
+    onSuccess: () => {
+      refetch();
+      setDeleteModalMetaData({
+        isOpen: false,
+        id: "0",
+        message: "",
+        hideSubmit: false,
+      });
+      setSelectedClient([]);
+
+      return async () => {
+        await queryClient.invalidateQueries({ queryKey: ["client"] });
+      };
+    },
+  });
 
   // When data changes, update CSV download URL with new data
   useEffect(() => {
     if (data && data.length > 0) {
-      let csvData = jsonToCsv(data); // Add .items.data
-      console.log("cdsv", csvData);
+      const csvData = jsonToCsv(data);
       // Create a CSV file and allow the user to download it
-      let blob = new Blob([...csvData], { type: "text/csv" });
-      let url = window.URL.createObjectURL(blob);
+      const blob = new Blob([...csvData], { type: "text/csv" });
+      const url = window.URL.createObjectURL(blob);
       const download = "data.csv";
 
       setDownloadAttrs({ href: url, download });
     }
   }, [data]);
 
-  const fetchData = () => {
-    setLoading(true);
-    getData()
-      .then((res) => {
-        console.log("data", res);
-        setData(res);
-      })
-      .catch((err) => {
-        console.log(err);
-        setError(err.message);
-      })
-      .finally(() => setLoading(false));
-  };
-
-  const handleDelete = (id: string | Array<string>) => {
-    if (typeof id === "string") {
-      console.log("stirng");
-    }
-  };
-
-  const ActionButtons = () => (
+  // Buttons to be passed into every table row.
+  const ActionButtons = ({ id }: { id: string }) => (
     <div className="table__actions">
-      <IconButton>
+      <IconButton
+        onClick={() =>
+          setDeleteModalMetaData({
+            isOpen: true,
+            id: id,
+            message: "Are you sure you want to delete this client?",
+            hideSubmit: false,
+          })
+        }
+      >
         <Icon icon="bin" />
       </IconButton>
       <IconButton onClick={(e) => handleCopy(e)} data-wizard={8}>
         <Icon icon="paperclip" />
       </IconButton>
+      <IconButton
+        onClick={() => setModalContext({ isOpen: true, editing: id })}
+        data-wizard={9}
+      >
+        <Icon icon="pencil" />
+      </IconButton>
     </div>
   );
 
+  // Event delegation optimization - handle click event on the table instead of each child. Saves us passing in multiple click events.
   const handleTableClick = (e: MouseEvent) => {
     if (e.target instanceof HTMLElement) {
       const targetId = e.target.closest("tr")!.getAttribute("data-clientid")!;
       const currentSelectedClient = selectedClient ? [...selectedClient] : [];
 
       if (targetId !== null) {
-        if (currentSelectedClient.indexOf(targetId) === -1) {
+        if (currentSelectedClient.indexOf(`${targetId}`) === -1) {
           currentSelectedClient.push(targetId);
         } else {
           currentSelectedClient.splice(
-            currentSelectedClient.indexOf(targetId),
+            currentSelectedClient.indexOf(`${targetId}`),
             1
           );
         }
-
         setSelectedClient(currentSelectedClient);
       }
     }
   };
 
-  const handleCopy = (e: MouseEvent) => {
-    if (e.target) {
-      const targetId = e.target.closest("tr")!.getAttribute("data-clientid")!;
+  const handleCopy = useCallback(
+    (e: MouseEvent) => {
+      if (e?.target) {
+        const targetId = e.target.closest("tr")!.getAttribute("data-clientid")!;
 
-      const clientData = JSON.stringify(
-        data.filter((el) => el.id === targetId)[0]
-      );
+        const clientData = JSON.stringify(
+          data.filter((el) => el.id == targetId)
+        );
 
-      navigator.clipboard.writeText(clientData);
-    }
-  };
-
-  const startWizard = useCallback(() => {
-    setWizardContext(1);
-  }, [setWizardContext]);
+        navigator.clipboard.writeText(clientData);
+      }
+    },
+    [data]
+  );
 
   const TableContents = () => {
-    return data.map((el, i) => {
+    return data?.map((el, i) => {
       return (
         <tr
           data-clientid={el.id}
@@ -181,15 +163,15 @@ export const Table = () => {
           data-wizard={i === 0 ? 4 : undefined}
         >
           <td>
-            <Checkbox checked={selectedClient.indexOf(el.id) > -1} />
+            <Checkbox checked={selectedClient.indexOf(`${el.id}`) > -1} />
           </td>
           <td>{el.name}</td>
           <td>{el.dob}</td>
-          <td>{el["primary-language"]}</td>
-          <td>{el["secondary-language"]}</td>
+          <td>{el["primary_language"]}</td>
+          <td>{el["secondary_language"]}</td>
           <td>{el.funding}</td>
           <td>
-            <ActionButtons />
+            <ActionButtons id={`${el.id}`} />
           </td>
         </tr>
       );
@@ -203,7 +185,7 @@ export const Table = () => {
           <h1 className="type--lg">TurnPoint Client Records</h1>
         </div>
         <div className="col">
-          <IconButton onClick={() => startWizard()}>
+          <IconButton onClick={() => setWizardContext(1)} data-wizard={10}>
             <Icon icon="question-mark" />
           </IconButton>
         </div>
@@ -211,19 +193,43 @@ export const Table = () => {
 
       <div className="table__head">
         <label>Quick actions:</label>
-        <IconButton onClick={() => setModalContext(true)} data-wizard={1}>
+        <IconButton
+          onClick={() => setModalContext({ isOpen: true })}
+          data-wizard={1}
+        >
           <Icon icon="plus" />
         </IconButton>
-        <IconButton data-wizard={5}>
+        <IconButton
+          data-wizard={5}
+          onClick={() => {
+            if (selectedClient.length > 0) {
+              setDeleteModalMetaData({
+                isOpen: true,
+                id: selectedClient,
+                message: `Are you sure you want to delete ${
+                  selectedClient.length
+                } client${selectedClient.length > 1 ? "s" : ""}?`,
+              });
+            } else {
+              setDeleteModalMetaData({
+                isOpen: true,
+                id: selectedClient,
+                message: `You haven't selected any clients to delete in bulk. Please close this modal and select some clients before using the bulk delete function.`,
+                hideSubmit: true,
+              });
+            }
+          }}
+        >
           <Icon icon="bin" />
         </IconButton>
-        <IconButton onClick={() => fetchData()} data-wizard={6}>
+        <IconButton onClick={() => refetch()} data-wizard={6}>
           <Icon icon="refresh" />
         </IconButton>
         <IconLink id="download" {...downloadAttrs} data-wizard={7}>
           <Icon icon="download" />
         </IconLink>
       </div>
+
       <table className="table__table" onClick={(e) => handleTableClick(e)}>
         <thead>
           <tr>
@@ -240,9 +246,38 @@ export const Table = () => {
           <TableContents />
         </tbody>
       </table>
-      {error && <p>{error}</p>}
 
-      {loading && <Loading />}
+      {error && <p>{error.message}</p>}
+
+      {isPending && <Loading />}
+
+      <Modal
+        open={deleteModalMetaData.isOpen}
+        onClose={() =>
+          setDeleteModalMetaData({ isOpen: false, message: "", id: "0" })
+        }
+      >
+        <div className="modal-delete__inner">
+          <p className="">{deleteModalMetaData.message}</p>
+          <div className="col col--row col--gap">
+            {!deleteModalMetaData.hideSubmit && (
+              <button
+                className="button button--fill"
+                onClick={() => deleteClients.mutate(deleteModalMetaData.id)}
+              >
+                Delete
+              </button>
+            )}
+
+            <button
+              className="button button--outline"
+              onClick={() => setDeleteModalMetaData({ isOpen: false, id: "0" })}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

@@ -1,30 +1,36 @@
-# React + TypeScript + Vite
+# TurnPoint Client Table project
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This project was created as a demonstration of my React skills for a job opportunity at TurnPoint.
 
-Currently, two official plugins are available:
+## Prerequisite
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Firstly, make sure you've got the Express JS API project running. This will make a new SQL database. This project relies on the data being available in this database on your `localhost:3000`.
 
-## Expanding the ESLint configuration
+`git clone https://github.com/ElliotByrne/vite-react-ts-client-setup-wizard.git`
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+Make sure you've followed the setup instructions on the above repo before continuing with this project setup.
 
-- Configure the top-level `parserOptions` property like this:
+## Get started
 
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
-```
+1. `npm install`
+2. `npm run dev`
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+The application should now be available at `http://localhost:5173/`.
+
+Click on the `(?)` button at the top right of the table to learn how to use the application.
+
+## Things to note
+
+I was only able to commit three days to this project due to other life commitments, but I feel like I've met all of the requirements. I have added some extra features that I hope you appriciate, enjoy playing around with it!
+
+See below some niggles that I am already aware of. I am frustrated to submit the project with these small issues outstanding, and in a real world project this wouldn't be the case. If I had an extra few hours on it I am certain these would be fixed.
+
+1. For the best expirience, view this project on a larger monitor. I wasn't able to finesse the responsiveness of the web app which means the 'wizard' may overlap the modal. The modal may also overflow the app container on smaller screens.
+
+2. The TypeScript typings could be a bit tighter.
+
+3. I wish I had time to set up some unit tests using jest.
+
+4. Would have been nice to finesse the accessibility of the website.
+
+5. I was planning to include sorting functionality to each column but didn't manage to in time.

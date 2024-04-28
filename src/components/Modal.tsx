@@ -14,11 +14,11 @@ import { ModalContext } from "../global-state/ModalContext";
 interface ModalInterface {
   children: ReactNode | Array<ReactNode> | null;
   open: boolean;
-  onClose: () => void;
+  onClose?: () => void;
 }
 
 export const Modal = ({ children, open, onClose }: ModalInterface) => {
-  const [modalContext, setModalContext] = useContext(ModalContext);
+  const [_, setModalContext] = useContext(ModalContext);
 
   const [isOpen, setIsOpen] = useState(open);
   useEffect(() => {
@@ -26,8 +26,11 @@ export const Modal = ({ children, open, onClose }: ModalInterface) => {
   }, [open]);
 
   const handleClose = () => {
+    setModalContext({ isOpen: false });
     setIsOpen(false);
-    onClose();
+    if (onClose) {
+      onClose();
+    }
   };
 
   const classes = classNames({
@@ -39,7 +42,7 @@ export const Modal = ({ children, open, onClose }: ModalInterface) => {
     <div className={classes}>
       <div className="modal-inner">
         <span className="modal__close">
-          <IconButton onClick={() => setModalContext(false)}>
+          <IconButton onClick={() => handleClose()}>
             <Icon icon="cross" />
           </IconButton>
         </span>

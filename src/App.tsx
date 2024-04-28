@@ -7,27 +7,36 @@ import { ModalContext } from "./global-state/ModalContext";
 import { Modal } from "./components/Modal";
 import { FormAddNew } from "./components/FormAddNew";
 
+// Query
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
 function App() {
   const [wizardStep, setWizardStep] = useState(0);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState({
+    isOpen: false,
+    editing: false,
+  });
+  const queryClient = new QueryClient();
 
   return (
-    <ModalContext.Provider value={[isModalOpen, setIsModalOpen]}>
-      <WizardContext.Provider value={[wizardStep, setWizardStep]}>
-        <div>
+    <QueryClientProvider client={queryClient}>
+      <ModalContext.Provider value={[isModalOpen, setIsModalOpen]}>
+        <WizardContext.Provider value={[wizardStep, setWizardStep]}>
           <Table />
           <Wizard />
-          <Modal open={isModalOpen}>
-            <h2 className="type--lg">Add a new client</h2>
+          <Modal open={isModalOpen.isOpen}>
+            <h2 className="type--lg">
+              {!isModalOpen.editing ? "Add a new client" : "Editing client"}
+            </h2>
             <p className="type type--sm">
               Please ensure you have prior permission to add client records
               before submitting this form.
             </p>
             <FormAddNew />
           </Modal>
-        </div>
-      </WizardContext.Provider>
-    </ModalContext.Provider>
+        </WizardContext.Provider>
+      </ModalContext.Provider>
+    </QueryClientProvider>
   );
 }
 
