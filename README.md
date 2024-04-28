@@ -35,4 +35,10 @@ See below some niggles that I am already aware of. I am frustrated to submit the
 
 5. I was planning to include sorting functionality to each column but didn't manage to in time.
 
-6. For the ExpressJS repo, I should have done this using TypeScript. Although I hope the front-end code shows that I am proficient in using TS. Also, I was hoping to include server side validation but I didn't have the time.
+6. Some nicely handled errors would have been nice. I would have had the errors pop up in a Toast component.
+
+For the ExpressJS repo, here's some things I planned on doing but didn't get round to.
+
+1. I should have done this using TypeScript. Although I hope the front-end code shows that I am proficient in using TS.
+2. Also, I was hoping to include server side validation but I didn't have time.
+3. Some further error handling on the server side would have been nice.
