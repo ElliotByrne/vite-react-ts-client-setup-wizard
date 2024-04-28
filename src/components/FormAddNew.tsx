@@ -93,14 +93,18 @@ export const FormAddNew = () => {
       </div>
 
       <div className="col col--fill  form__footer">
-        {errors && (
+        {Object.keys(errors).length > 0 && (
           <FormError message="The form has errors, please recheck each input has been filled out correctly." />
         )}
       </div>
 
       <div className="col col--gap col--row">
         <div className="col col--fill">
-          <button className="button button--outline" type="submit">
+          <button
+            className="button button--outline"
+            type="submit"
+            data-wizard={2}
+          >
             Add another
           </button>
         </div>
@@ -109,6 +113,7 @@ export const FormAddNew = () => {
             className="button button--fill"
             type="submit"
             onClick={() => handleClose()}
+            data-wizard={3}
           >
             Add and close
           </button>

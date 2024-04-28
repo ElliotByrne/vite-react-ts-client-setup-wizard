@@ -1,6 +1,7 @@
 import React, {
   FunctionComponent,
   ReactNode,
+  useContext,
   useEffect,
   useState,
 } from "react";
@@ -8,6 +9,7 @@ import classNames from "classnames";
 import "../App.css";
 import { IconButton } from "./IconButton";
 import { Icon } from "./Icon";
+import { ModalContext } from "../global-state/ModalContext";
 
 interface ModalInterface {
   children: ReactNode | Array<ReactNode> | null;
@@ -16,6 +18,8 @@ interface ModalInterface {
 }
 
 export const Modal = ({ children, open, onClose }: ModalInterface) => {
+  const [modalContext, setModalContext] = useContext(ModalContext);
+
   const [isOpen, setIsOpen] = useState(open);
   useEffect(() => {
     setIsOpen(open);
@@ -35,7 +39,7 @@ export const Modal = ({ children, open, onClose }: ModalInterface) => {
     <div className={classes}>
       <div className="modal-inner">
         <span className="modal__close">
-          <IconButton onClick={() => handleClose()}>
+          <IconButton onClick={() => setModalContext(false)}>
             <Icon icon="cross" />
           </IconButton>
         </span>

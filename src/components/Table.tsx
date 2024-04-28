@@ -1,12 +1,12 @@
-import React, { useCallback, useEffect, useState, lazy } from "react";
+import React, { useCallback, useEffect, useState, useContext } from "react";
 import { ClientInterface } from "../interfaces/client.interface";
-import { FormAddNew } from "./FormAddNew";
 import { IconButton } from "./IconButton";
 import { IconLink } from "./IconLink";
 import { Icon } from "./Icon";
 import { Checkbox } from "./Checkbox";
-import { Modal } from "./Modal";
 import { Loading } from "./Loading";
+import { WizardContext } from "../global-state/WizardContext";
+import { ModalContext } from "../global-state/ModalContext";
 
 function jsonToCsv(jsonData) {
   let csv = "";
@@ -83,6 +83,8 @@ export const Table = () => {
     href: "",
     download: "clients-csv.csv",
   });
+  const [wizardContext, setWizardContext] = useContext(WizardContext);
+  const [modalContext, setModalContext] = useContext(ModalContext);
 
   // Initial render
   useEffect(() => {
@@ -117,41 +119,22 @@ export const Table = () => {
       .finally(() => setLoading(false));
   };
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // useEffect(() => {
-  //   const highestIdInArray =
-  //     todos.length > 0
-  //       ? todos.reduce((prev, cur) => (cur.id > prev.id ? cur : prev)).id
-  //       : 0;
-  //   if (highestIdInArray > lastFetched) {
-  //     setLastFetched(highestIdInArray);
-  //   }
-  // }, [todos]);
-
   const handleDelete = (id: string | Array<string>) => {
     if (typeof id === "string") {
       console.log("stirng");
     }
   };
 
-  const ActionButtons = () => {
-    return (
-      <div className="table__actions">
-        <IconButton>
-          <Icon icon="bin" />
-        </IconButton>
-        <IconButton onClick={(e) => handleCopy(e)}>
-          <Icon icon="paperclip" />
-        </IconButton>
-      </div>
-    );
-  };
-
-  const handleModalVisible = (visible: boolean) => {
-    // Do something with the dynamically imported module
-    setIsModalOpen(visible);
-  };
+  const ActionButtons = () => (
+    <div className="table__actions">
+      <IconButton>
+        <Icon icon="bin" />
+      </IconButton>
+      <IconButton onClick={(e) => handleCopy(e)} data-wizard={8}>
+        <Icon icon="paperclip" />
+      </IconButton>
+    </div>
+  );
 
   const handleTableClick = (e: MouseEvent) => {
     if (e.target instanceof HTMLElement) {
@@ -176,7 +159,6 @@ export const Table = () => {
   const handleCopy = (e: MouseEvent) => {
     if (e.target) {
       const targetId = e.target.closest("tr")!.getAttribute("data-clientid")!;
-      console.log(e.target);
 
       const clientData = JSON.stringify(
         data.filter((el) => el.id === targetId)[0]
@@ -186,10 +168,18 @@ export const Table = () => {
     }
   };
 
+  const startWizard = useCallback(() => {
+    setWizardContext(1);
+  }, [setWizardContext]);
+
   const TableContents = () => {
-    return data.map((el) => {
+    return data.map((el, i) => {
       return (
-        <tr data-clientid={el.id} key={el.id}>
+        <tr
+          data-clientid={el.id}
+          key={el.id}
+          data-wizard={i === 0 ? 4 : undefined}
+        >
           <td>
             <Checkbox checked={selectedClient.indexOf(el.id) > -1} />
           </td>
@@ -208,32 +198,36 @@ export const Table = () => {
 
   return (
     <div className="table">
-      <h1 className="type--lg">TurnPoint client records</h1>
+      <div className="table__top col col--gap col--row col--align-center">
+        <div className="col col--fill">
+          <h1 className="type--lg">TurnPoint Client Records</h1>
+        </div>
+        <div className="col">
+          <IconButton onClick={() => startWizard()}>
+            <Icon icon="question-mark" />
+          </IconButton>
+        </div>
+      </div>
+
       <div className="table__head">
         <label>Quick actions:</label>
-        <IconButton onClick={() => handleModalVisible(true)}>
+        <IconButton onClick={() => setModalContext(true)} data-wizard={1}>
           <Icon icon="plus" />
         </IconButton>
-        <IconButton>
+        <IconButton data-wizard={5}>
           <Icon icon="bin" />
         </IconButton>
-        <IconButton onClick={() => fetchData()}>
+        <IconButton onClick={() => fetchData()} data-wizard={6}>
           <Icon icon="refresh" />
         </IconButton>
-        <IconLink
-          id="download"
-          // onClick={() => (window.location = downloadAttrs.href)}
-          {...downloadAttrs}
-        >
+        <IconLink id="download" {...downloadAttrs} data-wizard={7}>
           <Icon icon="download" />
         </IconLink>
       </div>
       <table className="table__table" onClick={(e) => handleTableClick(e)}>
         <thead>
           <tr>
-            <th>
-              <Checkbox />
-            </th>
+            <th></th>
             <th>Client name</th>
             <th>Date of birth</th>
             <th>Main language</th>
@@ -247,14 +241,7 @@ export const Table = () => {
         </tbody>
       </table>
       {error && <p>{error}</p>}
-      <Modal open={isModalOpen} onClose={() => handleModalVisible(false)}>
-        <h2 className="type--lg">Add a new client</h2>
-        <p className="type type--sm">
-          Please ensure you have prior permission to add client records before
-          submitting this form.
-        </p>
-        <FormAddNew />
-      </Modal>
+
       {loading && <Loading />}
     </div>
   );
