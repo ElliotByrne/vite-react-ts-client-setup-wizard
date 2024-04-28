@@ -34,3 +34,5 @@ See below some niggles that I am already aware of. I am frustrated to submit the
 4. Would have been nice to finesse the accessibility of the website.
 
 5. I was planning to include sorting functionality to each column but didn't manage to in time.
+
+6. For the ExpressJS repo, I should have done this using TypeScript. Although I hope the front-end code shows that I am proficient in using TS. Also, I was hoping to include server side validation but I didn't have the time.
