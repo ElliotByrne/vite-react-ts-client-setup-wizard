@@ -35,7 +35,9 @@ See below some niggles that I am already aware of. I am frustrated to submit the
 
 5. I was planning to include sorting functionality to each column but didn't manage to in time.
 
-6. Some nicely handled errors would have been nice. I would have had the errors pop up in a Toast component.
+6. I wanted to include more thorough validation to the form, such as real date formatting and a date picker to go with it.
+
+7. Some nicely handled API errors would have been nice. I would have had the errors pop up in a Toast component.
 
 For the ExpressJS repo, here's some things I planned on doing but didn't get round to.
 
